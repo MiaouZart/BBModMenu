@@ -53,7 +53,10 @@ namespace BBModMenu
             var visualElementOfMainScreen = backingField.GetValue(mainScreen) as VisualElement;
             VisualElement menuVisualElement = visualElementOfMainScreen?[0];
             Button menuModButton = new Button{ text = "Mod Menu" };
-            menuVisualElement?.Add(menuModButton);
+            VisualElement wrapper = new VisualElement();
+            wrapper.style.backgroundColor = ModMenu._BBBackGround;
+            wrapper.Add(menuModButton);
+            menuVisualElement?.Add(wrapper);
             menuModButton.clicked += delegate(){ _gameUI.SwitchToScreen<ModMenu>(); };
         }
         
@@ -63,7 +66,10 @@ namespace BBModMenu
             var visualElementOfMainScreen = backingField.GetValue(customMapPauseScreen) as VisualElement;
             VisualElement menuVisualElement = visualElementOfMainScreen?[0];
             Button menuModButton = new Button{ text = "Mod Menu" };
-            menuVisualElement?.Add(menuModButton);
+            VisualElement wrapper = new VisualElement();
+            wrapper.style.backgroundColor = ModMenu._BBBackGround;
+            wrapper.Add(menuModButton);
+            menuVisualElement?.Add(wrapper);
             menuModButton.clicked += delegate(){ _gameUI.SwitchToScreen<ModMenu>(); };
         }
         
@@ -80,7 +86,7 @@ public class ModMenu : UIScreen {
     private VisualElement _menuItems;
     private ScrollView _scrollView;
     public static Color _BBgreen = new Color(106f / 255f, 144f / 255f, 43f / 255f);
-    public static Color _BBBackGround = new Color(0.000f, 0.000f, 0.000f, 0.502f);
+    public static Color _BBBackGround = new Color(0.000f, 0.000f, 0.000f, 0.7f);
     private Button backButton;
     
     public ModMenu(GameUI ui) : base(ui, "Intro") {

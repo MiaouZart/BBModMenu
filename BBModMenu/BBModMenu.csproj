@@ -150,6 +150,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BBSettings.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="README.md" />
+  </ItemGroup>
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 
