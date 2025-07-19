@@ -26,5 +26,9 @@ namespace BBModMenu
         public static void  SavePref() {
             MelonPreferences.Save();
         }
+
+        public static bool HasEntry(String categoryName, String entryName) {
+            return MelonPreferences.HasEntry(categoryName, entryName);
+        }
     }
 }
