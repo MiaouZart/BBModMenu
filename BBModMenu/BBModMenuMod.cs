@@ -69,10 +69,7 @@ namespace BBModMenu
         
     }
 
-
-    private void Update() {
-        //Melon<BBModMenuMod>.Logger.Msg(_gameUI.ActiveScreen);
-    }
+    
     }
 
 public class ModMenu : UIScreen {
@@ -140,6 +137,10 @@ public class ModMenu : UIScreen {
             base.UI.SwitchToPreviousScreen();
         }
 
+    }
+
+    public VisualElement getRootVisualElement() {
+        return _root;
     }
     
     
