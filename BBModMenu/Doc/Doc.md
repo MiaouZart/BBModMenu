@@ -82,6 +82,26 @@ var resetBtn = _modMenu.CreateButton("Reset");
 resetWrapper.Add(resetBtn);
 ```
 
+
+
+#### Carousel 
+```csharp
+Dictionary<string, string> difficultyOptions = new Dictionary<string, string>
+{
+    { "easy", "Easy" },
+    { "medium", "Medium" },
+    { "hard", "Hard" }
+};
+
+var carousel = _modMenu.CreateCarousel("Gameplay", difficultyOptions, "Difficulty", (val) =>
+{
+    Debug.Log("Difficulty changed to " + val);
+}, "Medium");
+
+settingsGroup.Add(carousel);
+
+```
+
 ---
 
 ### 4. Organize Layout

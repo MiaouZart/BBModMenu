@@ -295,6 +295,65 @@ public class ModMenu : UIScreen {
     }
 
     
+    public VisualElement CreateCarousel(string category,string name, Dictionary<string, string> card,  Action<string> onValueChanged = null, string defaultValue = "")
+    {
+        VisualElement newcarousel = new VisualElement();
+        newcarousel.style.flexDirection = FlexDirection.Row;
+        newcarousel.style.alignItems = Align.Center;
+        newcarousel.style.justifyContent = Justify.Center;
+        newcarousel.style.backgroundColor = _BBBackGround;
+        List<string> keys = card.Keys.ToList();
+
+        if (!BBSettings.HasEntry(category, name))
+        {
+            BBSettings.AddEntry<string>(category, name, defaultValue != "" ? defaultValue : card[keys[0]]);
+        }
+
+        string savedValue = BBSettings.GetEntryValue<string>(category, name);
+        int currentIndex = keys.IndexOf(card.FirstOrDefault(x => x.Value == savedValue).Key);
+
+        if (currentIndex < 0) currentIndex = 0;
+
+        var lbl = CreateLabel(card[keys[currentIndex]]);
+        lbl.style.fontSize = 20;
+        var previous = CreateButton("<");
+        var next = CreateButton(">");
+
+        newcarousel.Add(previous);
+        newcarousel.Add(lbl);
+        newcarousel.Add(next);
+
+        void UpdateLabel()
+        {
+            string newValue = card[keys[currentIndex]];
+            lbl.text = newValue;
+            BBSettings.SetEntryValue<string>(category, name, newValue);
+            BBSettings.SavePref();
+            onValueChanged?.Invoke(newValue);
+        }
+
+        void NavigateNext()
+        {
+            currentIndex = (currentIndex + 1) % keys.Count;
+            UpdateLabel();
+        }
+
+        void NavigatePrevious()
+        {
+            currentIndex = (currentIndex - 1 + keys.Count) % keys.Count;
+            UpdateLabel();
+        }
+
+        next.clicked += NavigateNext;
+        previous.clicked += NavigatePrevious;
+
+        return newcarousel;
+    }
+
+    
+    
+    
+    
     
 
 }
