@@ -151,6 +151,7 @@
     <Compile Include="BBSettings.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Doc\Doc.md" />
     <Content Include="README.md" />
   </ItemGroup>
 
