@@ -14,6 +14,11 @@ namespace BBModMenu
             public string Value;
             public System.Action<string> OnChanged;
         }
+        public class CarouselEntry
+        {
+            public VisualElement Root;
+            public string Value;
+        }
         
         public static bool IsHotkeyPressed(string combo)
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -296,26 +297,26 @@ public class ModMenu : UIScreen {
     }
 
     
-    public VisualElement CreateCarousel(string category,string name, Dictionary<string, string> card,  Action<string> onValueChanged = null, string defaultValue = "")
+    public Utils.CarouselEntry CreateCarousel(string category,string name, List<string> card,  Action<string> onValueChanged = null, string defaultValue = "")
     {
+        Utils.CarouselEntry entry = new Utils.CarouselEntry();
         VisualElement newcarousel = new VisualElement();
         newcarousel.style.flexDirection = FlexDirection.Row;
         newcarousel.style.alignItems = Align.Center;
         newcarousel.style.justifyContent = Justify.Center;
         newcarousel.style.backgroundColor = _BBBackGround;
-        List<string> keys = card.Keys.ToList();
 
         if (!BBSettings.HasEntry(category, name))
         {
-            BBSettings.AddEntry<string>(category, name, defaultValue != "" ? defaultValue : card[keys[0]]);
+            BBSettings.AddEntry<string>(category, name, defaultValue != "" ? defaultValue : card[0]);
         }
 
         string savedValue = BBSettings.GetEntryValue<string>(category, name);
-        int currentIndex = keys.IndexOf(card.FirstOrDefault(x => x.Value == savedValue).Key);
+        int currentIndex = card.IndexOf(savedValue);
 
         if (currentIndex < 0) currentIndex = 0;
 
-        var lbl = CreateLabel(card[keys[currentIndex]]);
+        var lbl = CreateLabel(card[currentIndex]);
         lbl.style.fontSize = 20;
         var previous = CreateButton("<");
         var next = CreateButton(">");
@@ -326,7 +327,7 @@ public class ModMenu : UIScreen {
 
         void UpdateLabel()
         {
-            string newValue = card[keys[currentIndex]];
+            string newValue = card[currentIndex];
             lbl.text = newValue;
             BBSettings.SetEntryValue<string>(category, name, newValue);
             BBSettings.SavePref();
@@ -335,20 +336,20 @@ public class ModMenu : UIScreen {
 
         void NavigateNext()
         {
-            currentIndex = (currentIndex + 1) % keys.Count;
+            currentIndex = (currentIndex + 1) % card.Count;
             UpdateLabel();
         }
 
         void NavigatePrevious()
         {
-            currentIndex = (currentIndex - 1 + keys.Count) % keys.Count;
+            currentIndex = (currentIndex - 1 + card.Count) % card.Count;
             UpdateLabel();
         }
 
         next.clicked += NavigateNext;
         previous.clicked += NavigatePrevious;
 
-        return newcarousel;
+        return entry;
     }
 
     

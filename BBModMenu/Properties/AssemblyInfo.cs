@@ -13,7 +13,7 @@ using BBModMenu;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[assembly: MelonInfo(typeof(BBModMenuMod), "Beton Brutal ModMenu", "1.0.0", "MiaouZart")]
+[assembly: MelonInfo(typeof(BBModMenuMod), "Beton Brutal ModMenu", "1.0.3", "MiaouZart")]
 [assembly: MelonGame("", "Beton Brutal")]
 
 [assembly: ComVisible(false)]
