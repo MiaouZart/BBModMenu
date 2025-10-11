@@ -149,6 +149,7 @@
     <Compile Include="BBModMenuMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BBSettings.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Doc\Doc.md" />

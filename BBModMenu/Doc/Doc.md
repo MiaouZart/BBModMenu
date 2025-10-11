@@ -137,46 +137,53 @@ sliderGroup.Add(bWrapper);
 
 ## 📖 API Reference
 
-### `AddSetting(string setting)`
+### `VisualElement AddSetting(string setting)`
 Creates a new category/section in the Mod Menu.  
 Returns a `VisualElement` group container.
 
 ---
 
-### `CreateGroup(string groupName)`
+### `VisualElement CreateGroup(string groupName)`
 Creates a container (`VisualElement`) for grouping related settings.
 
 ---
 
-### `CreateWrapper()`
+### `VisualElement CreateWrapper()`
 Creates a styled container (`VisualElement`) for a single control (label + slider, etc.).
 
 ---
 
-### `CreateLabel(string text)`
+### `VisualElement CreateLabel(string text)`
 Creates a simple text label.
 
 ---
 
-### `CreateTitleLabel(string text)`
+### `VisualElement CreateTitleLabel(string text)`
 Creates a large, styled title label.
 
 ---
 
-### `CreateButton(string text)`
+### `VisualElement CreateButton(string text)`
 Creates a clickable button.
 
 ---
 
-### `CreateSlider(string category, string name, float min, float max, float defaultValue = 0, bool onlyInt = false)`
+### `VisualElement CreateSlider(string category, string name, float min, float max, float defaultValue = 0, bool onlyInt = false)`
 Creates a slider linked to a saved setting.
 
 ---
 
-### `CreateToggle(string category, string name, bool defaultValue = false)`
+### `VisualElement CreateToggle(string category, string name, bool defaultValue = false)`
 Creates a toggle checkbox linked to a saved setting.
 
 ---
+
+
+### `HotKeyEntry CreateHotKey(string category, string name, KeyCode defaultKey)`
+Creates a hotKey settings that support combo with ctrl,shift,alt :see example to understand how to use.
+
+---
+
 
 ##  Persistence
 
@@ -188,6 +195,8 @@ No extra serialization logic is required — values are stored per **category + 
 ## 📌 Example: Flashlight Settings
 
 ```csharp
+using static BBModMenu.Utils;//need to be import to use IsHotkeyPressed(string)
+
 string categoryName = "Flashlight";
 var flashlightSettings = _modMenu.AddSetting(categoryName);
 
@@ -196,6 +205,15 @@ var sliderGroup = _modMenu.CreateGroup("Sliders");
 var rSlider = _modMenu.CreateSlider(categoryName, "Red", 0, 255, 255, true);
 rSlider.RegisterValueChangedCallback(evt => updateColor());
 
+string activateKey;
+var key = _modMenu.CreateHotKey(categoryName, "key", KeyCode.F);
+            var visualElemntOfKey = key.Root;
+            activateKey = key.Value;
+            key.OnChanged += newKey =>
+            {
+                MelonLogger.Msg($"New assigned key : {newKey}");
+                activateKey = newKey;
+            };
 
 // Organize layout
 var rWrapper = _modMenu.CreateWrapper();
@@ -204,4 +222,15 @@ rWrapper.Add(rSlider);
 
 sliderGroup.Add(rWrapper);
 flashlightSettings.Add(sliderGroup);
+
+
+//in the update you see if pressed :
+private void Update() {
+        if (IsHotkeyPressed(activateKey))//Check if a given hotkey string was pressed this frame
+        {
+            MelonLogger.Msg("Activate Key pressed!");
+            _flashlight.flashlight.enabled = !_flashlight.flashlight.enabled;
+        } 
+}
+
 ```

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using Button = UnityEngine.UIElements.Button;
 using Slider = UnityEngine.UIElements.Slider;
@@ -351,9 +352,67 @@ public class ModMenu : UIScreen {
     }
 
     
-    
-    
-    
+
+
+    public Utils.HotKeyEntry CreateHotKey(string category, string name, KeyCode defaultKey)
+    {
+        Utils.HotKeyEntry entry = new Utils.HotKeyEntry();
+        VisualElement newHotkey = new VisualElement();
+
+        if (!BBSettings.HasEntry(category, name))
+            BBSettings.AddEntry<string>(category, name, defaultKey.ToString());
+
+        string savedValue = BBSettings.GetEntryValue<string>(category, name);
+        Label labelName = CreateLabel(name);
+        Label labelKey = CreateLabel(savedValue);
+        labelKey.focusable = true;
+        labelKey.style.fontSize =10+labelKey.style.fontSize.value.value ;
+        entry.Root = newHotkey;
+        entry.Value = savedValue;
+
+        labelKey.RegisterCallback<ClickEvent>(evt =>
+        {
+            labelKey.text = "Press a key...";
+            labelKey.Focus();
+
+            void OnKeyDown(KeyDownEvent keyEvt)
+            {
+                bool ctrl = keyEvt.ctrlKey;
+                bool shift = keyEvt.shiftKey;
+                bool alt = keyEvt.altKey;
+
+                KeyCode key = keyEvt.keyCode;
+
+                if (key == KeyCode.LeftControl || key == KeyCode.RightControl ||
+                    key == KeyCode.LeftShift || key == KeyCode.RightShift ||
+                    key == KeyCode.LeftAlt || key == KeyCode.RightAlt ||
+                    key == KeyCode.LeftCommand || key == KeyCode.RightCommand)
+                    return;
+
+                string combo = "";
+                if (ctrl) combo += "Ctrl+";
+                if (shift) combo += "Shift+";
+                if (alt) combo += "Alt+";
+                combo += key.ToString();
+
+                labelKey.text = combo;
+                entry.Value = combo; 
+
+                BBSettings.SetEntryValue(category, name, combo);
+                BBSettings.SavePref();
+
+                entry.OnChanged?.Invoke(combo); 
+                labelKey.UnregisterCallback<KeyDownEvent>(OnKeyDown);
+            }
+
+            labelKey.RegisterCallback<KeyDownEvent>(OnKeyDown);
+        });
+
+        newHotkey.Add(labelName);
+        newHotkey.Add(labelKey);
+        return entry;
+    }
+
     
 
 }
