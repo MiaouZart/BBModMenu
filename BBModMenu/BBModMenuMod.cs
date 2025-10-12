@@ -348,33 +348,56 @@ public class ModMenu : UIScreen {
 
         next.clicked += NavigateNext;
         previous.clicked += NavigatePrevious;
-
+		entry.Value = savedValue;
+        entry.Root = newcarousel;
         return entry;
     }
 
     
 
-
-    public Utils.HotKeyEntry CreateHotKey(string category, string name, KeyCode defaultKey)
-    {
+    public Utils.HotKeyEntry CreateHotKey(string category, string name, KeyCode defaultKey){
         Utils.HotKeyEntry entry = new Utils.HotKeyEntry();
         VisualElement newHotkey = new VisualElement();
-
         if (!BBSettings.HasEntry(category, name))
+        {
             BBSettings.AddEntry<string>(category, name, defaultKey.ToString());
+        }
 
         string savedValue = BBSettings.GetEntryValue<string>(category, name);
-        Label labelName = CreateLabel(name);
         Label labelKey = CreateLabel(savedValue);
+        Button buttonReset = CreateButton("Unbind");
+
+
+
+        buttonReset.clicked += UnbindControl;
+
+
+        void UnbindControl() {
+            labelKey.text = "Unbounded";
+            BBSettings.SetEntryValue<string>(category, name, "Unbind");
+            entry.Value = "Unbounded";
+        }    
+
+        labelKey.style.fontSize = 10 + labelKey.style.fontSize.value.value;
         labelKey.focusable = true;
-        labelKey.style.fontSize =10+labelKey.style.fontSize.value.value ;
+
         entry.Root = newHotkey;
         entry.Value = savedValue;
 
+        bool isListening = false;
+
         labelKey.RegisterCallback<ClickEvent>(evt =>
         {
-            labelKey.text = "Press a key...";
-            labelKey.Focus();
+            if (isListening) return;
+            isListening = true;
+
+            labelKey.text = "Press a key or mouse button...";
+
+            if (_root == null)
+            {
+                isListening = false;
+                return;
+            }
 
             void OnKeyDown(KeyDownEvent keyEvt)
             {
@@ -382,37 +405,72 @@ public class ModMenu : UIScreen {
                 bool shift = keyEvt.shiftKey;
                 bool alt = keyEvt.altKey;
 
-                KeyCode key = keyEvt.keyCode;
+                string keyName = "";
 
-                if (key == KeyCode.LeftControl || key == KeyCode.RightControl ||
-                    key == KeyCode.LeftShift || key == KeyCode.RightShift ||
-                    key == KeyCode.LeftAlt || key == KeyCode.RightAlt ||
-                    key == KeyCode.LeftCommand || key == KeyCode.RightCommand)
+                if (!char.IsControl(keyEvt.character) && keyEvt.character != '\0')
+                {
+                    keyName = keyEvt.character.ToString().ToUpper();
+                }
+                else
+                {
+                    keyName = keyEvt.keyCode.ToString();
+                }
+
+                if (keyEvt.keyCode == KeyCode.LeftControl || keyEvt.keyCode == KeyCode.RightControl ||
+                    keyEvt.keyCode == KeyCode.LeftShift || keyEvt.keyCode == KeyCode.RightShift ||
+                    keyEvt.keyCode == KeyCode.LeftAlt || keyEvt.keyCode == KeyCode.RightAlt ||
+                    keyEvt.keyCode == KeyCode.LeftCommand || keyEvt.keyCode == KeyCode.RightCommand)
                     return;
 
                 string combo = "";
                 if (ctrl) combo += "Ctrl+";
                 if (shift) combo += "Shift+";
                 if (alt) combo += "Alt+";
-                combo += key.ToString();
+                combo += keyName;
 
-                labelKey.text = combo;
-                entry.Value = combo; 
-
-                BBSettings.SetEntryValue(category, name, combo);
-                BBSettings.SavePref();
-
-                entry.OnChanged?.Invoke(combo); 
-                labelKey.UnregisterCallback<KeyDownEvent>(OnKeyDown);
+                SaveCombo(combo);
             }
 
-            labelKey.RegisterCallback<KeyDownEvent>(OnKeyDown);
+            void OnMouseDown(MouseDownEvent mouseEvt)
+            {
+                string buttonName = $"Mouse{mouseEvt.button}";
+                string combo = "";
+                if (Keyboard.current != null)
+                {
+                    if (Keyboard.current.ctrlKey.isPressed) combo += "Ctrl+";
+                    if (Keyboard.current.shiftKey.isPressed) combo += "Shift+";
+                    if (Keyboard.current.altKey.isPressed) combo += "Alt+";
+                }
+                combo += buttonName;
+
+                SaveCombo(combo);
+            }
+
+            void SaveCombo(string combo)
+            {
+                labelKey.text = combo;
+                entry.Value = combo;
+                BBSettings.SetEntryValue(category, name, combo);
+                BBSettings.SavePref();
+                entry.OnChanged?.Invoke(combo);
+
+                _root.UnregisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
+                _root.UnregisterCallback<MouseDownEvent>(OnMouseDown, TrickleDown.TrickleDown);
+
+                isListening = false;
+            }
+
+            _root.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
+            _root.RegisterCallback<MouseDownEvent>(OnMouseDown, TrickleDown.TrickleDown);
         });
 
-        newHotkey.Add(labelName);
         newHotkey.Add(labelKey);
+        newHotkey.Add(buttonReset);
         return entry;
     }
+
+
+
 
     
 

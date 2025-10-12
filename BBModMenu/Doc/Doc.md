@@ -1,20 +1,18 @@
 # BBModMenu – Mod Settings UI Library
 
-## BBModMenu is a Unity UI Toolkit–based library that extends the game’s **Mod Menu** to allow developers to easily add, display, and persist settings for their mods.
-
 ## Features
 
 * Automatically integrates into the game’s `GameUI` and adds a new **Mod Menu** screen.
 * Supports **persistent mod settings** via `BBSettings` (automatically saved/loaded).
 * Provides helper methods to create:
 
-  * Categories for organizing mod settings.
-  * Wrappers & groups for layout control.
-  * Labels & title labels for section headers.
-  * Sliders (with optional integer-only mode).
-  * Toggles (on/off checkboxes).
-  * Buttons for custom actions.
-  * Carousels and HotKeys.
+    * Categories for organizing mod settings.
+    * Wrappers & groups for layout control.
+    * Labels & title labels for section headers.
+    * Sliders (with optional integer-only mode).
+    * Toggles (on/off checkboxes).
+    * Buttons for custom actions.
+    * Carousels and HotKeys.
 * Built on Unity’s **UI Toolkit** (`VisualElement`, `Slider`, `Toggle`, etc.).
 
 ---
@@ -219,7 +217,8 @@ Creates a clickable button.
 
 ---
 
-### `VisualElement CreateSlider(string category, string name, float min, float max, float defaultValue = 0, bool onlyInt = false)`
+###
+`VisualElement CreateSlider(string category, string name, float min, float max, float defaultValue = 0, bool onlyInt = false)`
 
 Creates a slider linked to a saved setting.
 
@@ -231,7 +230,8 @@ Creates a toggle checkbox linked to a saved setting.
 
 ---
 
-### `CarouselEntry CreateCarousel(string category, string name, List<string> card,  Action<string> onValueChanged = null, string defaultValue = "")`
+###
+`CarouselEntry CreateCarousel(string category, string name, List<string> card,  Action<string> onValueChanged = null, string defaultValue = "")`
 
 Creates a carousel option with arrows to navigate between values in a list.
 
@@ -258,7 +258,7 @@ A static helper class that provides utility structures and functions for working
 Represents a Mod Menu hotkey entry.
 
 | Property    | Type             | Description                                                                   |
-| ----------- | ---------------- | ----------------------------------------------------------------------------- |
+|-------------|------------------|-------------------------------------------------------------------------------|
 | `Root`      | `VisualElement`  | The UI root element of the hotkey entry.                                      |
 | `Value`     | `string`         | The string value representing the current key combination (e.g., `"Ctrl+F"`). |
 | `OnChanged` | `Action<string>` | Callback invoked when the hotkey value is changed.                            |
@@ -270,7 +270,7 @@ Represents a Mod Menu hotkey entry.
 Represents a Mod Menu carousel entry.
 
 | Property | Type            | Description                                   |
-| -------- | --------------- | --------------------------------------------- |
+|----------|-----------------|-----------------------------------------------|
 | `Root`   | `VisualElement` | The UI root element of the carousel.          |
 | `Value`  | `string`        | The currently selected value in the carousel. |
 
@@ -280,7 +280,14 @@ Represents a Mod Menu carousel entry.
 
 ##### `bool Utils.IsHotkeyPressed(string combo)`
 
+
+
 Checks if a given key combination string (e.g. `"Ctrl+Shift+F"`) was pressed during the current frame.
+
+
+##### `bool Utils.IsHotkeyHeld(string combo)`
+
+Checks if a given key combination string (e.g. `"Ctrl+Shift+F"`) was held.
 
 **Parameters:**
 
@@ -310,7 +317,7 @@ No extra serialization logic is required — values are stored per **category + 
 
 ```csharp
 using static BBModMenu.Utils; // import for IsHotkeyPressed(string)
-
+HotKeyEntry _hotKeyEntry;        
 string categoryName = "Flashlight";
 var flashlightSettings = _modMenu.AddSetting(categoryName);
 
@@ -318,15 +325,13 @@ var sliderGroup = _modMenu.CreateGroup("Sliders");
 
 var rSlider = _modMenu.CreateSlider(categoryName, "Red", 0, 255, 255, true);
 rSlider.RegisterValueChangedCallback(evt => updateColor());
-
-string activateKey;
-var key = _modMenu.CreateHotKey(categoryName, "key", KeyCode.F);
-var visualElemntOfKey = key.Root;
-activateKey = key.Value;
+ 
+_hotKeyEntry = _modMenu.CreateHotKey(categoryName, "key", KeyCode.F);
+var visualElemntOfKey = _hotKeyEntry.Root;
+activateKey = _hotKeyEntry.Value;
 key.OnChanged += newKey =>
 {
     MelonLogger.Msg($"New assigned key : {newKey}");
-    activateKey = newKey;
 };
 
 // Organize layout
@@ -339,7 +344,7 @@ flashlightSettings.Add(sliderGroup);
 
 // In the update loop:
 private void Update() {
-    if (IsHotkeyPressed(activateKey)) {
+    if (IsHotkeyPressed(key.Value)) {
         MelonLogger.Msg("Activate Key pressed!");
         _flashlight.flashlight.enabled = !_flashlight.flashlight.enabled;
     } 

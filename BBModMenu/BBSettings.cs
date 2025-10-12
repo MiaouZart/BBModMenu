@@ -1,33 +1,30 @@
-using System;
-using System.Collections.Generic;
 using MelonLoader;
 
 namespace BBModMenu
 {
     public static class BBSettings
     {
-
-        public static void AddCategory(String categoryName) {
+        public static void AddCategory(string categoryName) {
             MelonPreferences.CreateCategory(categoryName);
         }
 
-        public static void AddEntry<T>(String categoryName,String entryName ,T defaultValue) {
-           MelonPreferences.CreateCategory(categoryName).CreateEntry<T>(entryName,defaultValue);
+        public static void AddEntry<T>(string categoryName, string entryName, T defaultValue) {
+            MelonPreferences.CreateCategory(categoryName).CreateEntry(entryName, defaultValue);
         }
 
-        public static T GetEntryValue<T>(String categoryName, String entryName) {
+        public static T GetEntryValue<T>(string categoryName, string entryName) {
             return MelonPreferences.GetEntryValue<T>(categoryName, entryName);
         }
 
-        public static void SetEntryValue<T>(String categoryName, String entryName, T newValue) {
-            MelonPreferences.SetEntryValue<T>(categoryName, entryName, newValue);
+        public static void SetEntryValue<T>(string categoryName, string entryName, T newValue) {
+            MelonPreferences.SetEntryValue(categoryName, entryName, newValue);
         }
 
-        public static void  SavePref() {
+        public static void SavePref() {
             MelonPreferences.Save();
         }
 
-        public static bool HasEntry(String categoryName, String entryName) {
+        public static bool HasEntry(string categoryName, string entryName) {
             return MelonPreferences.HasEntry(categoryName, entryName);
         }
     }
