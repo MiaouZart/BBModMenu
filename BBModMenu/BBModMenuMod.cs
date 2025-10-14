@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using HarmonyLib;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using UnityEngine.UIElements;
 using Button = UnityEngine.UIElements.Button;
 using Slider = UnityEngine.UIElements.Slider;
@@ -29,8 +29,7 @@ namespace BBModMenu
             }
         }
     }
-    class BBModMenuComponent : MonoBehaviour
-    {
+    class BBModMenuComponent : MonoBehaviour{
     private GameUI _gameUI;
     private List<UIScreen> _screens;
     public ModMenu ModMenu;
@@ -244,40 +243,101 @@ public class ModMenu : UIScreen {
     }
 
 
-    public Slider CreateSlider(string category,string name,float min, float max, float defaultValue = 0, bool onlyInt = false)
-    {
+
+    public Slider CreateSlider(string category, string name, float min, float max, float defaultValue = 0,
+        bool onlyInt = false) {
         BBSettings.AddEntry<float>(category, name, defaultValue);
-        Slider newSlider = new Slider(min, max)
-        {
-            value = BBSettings.GetEntryValue<float>(category, name),
-            name = "Slider",
+        float initialValue = BBSettings.GetEntryValue<float>(category, name);
+
+        Slider newSlider = new Slider(min, max){
+            value = initialValue,
+            name = name,
             showInputField = false
-            
-        };
-        newSlider.name = name;
-
-        TextField valueField = new TextField
-        {
-            value = onlyInt ? ((int)BBSettings.GetEntryValue<float>(category, name)).ToString() : BBSettings.GetEntryValue<float>(category, name).ToString("0.##"),
-            focusable = false,
-            isReadOnly = true
         };
 
-        valueField.style.width = 8 * 4 + 10; 
+        TextField valueField = new TextField{
+            value = onlyInt
+                ? ((int)initialValue).ToString()
+                : initialValue.ToString("0.##", CultureInfo.InvariantCulture),
+            isReadOnly = false,
+            focusable = true
+        };
+
+        valueField.style.width = 8 * 4 + 10;
         valueField.style.marginLeft = 10;
         newSlider.Add(valueField);
 
-        newSlider.RegisterValueChangedCallback(evt => 
+        newSlider[0][0][2].style.backgroundColor = Color.gray;
+        newSlider[0][0][2].style.paddingBottom = 20;
+        newSlider[0][0].style.unityTextAlign = TextAnchor.MiddleCenter;
+
+        newSlider.RegisterValueChangedCallback(evt =>
         {
             float newValue = onlyInt ? Mathf.Round(evt.newValue) : evt.newValue;
-            newSlider.value = newValue; 
-            valueField.value = onlyInt ? ((int)newValue).ToString() : newValue.ToString("0.##");
-            BBSettings.SetEntryValue<float>(category, name, evt.newValue);
+            newSlider.SetValueWithoutNotify(newValue);
+            valueField.SetValueWithoutNotify(onlyInt ? ((int)newValue).ToString() : newValue.ToString("0.##", CultureInfo.InvariantCulture));
+            BBSettings.SetEntryValue<float>(category, name, newValue);
             BBSettings.SavePref();
         });
-    
+
+        valueField.RegisterCallback<FocusOutEvent>(evt =>
+        {
+            string input = valueField.value.Replace(',', '.'); 
+            if (float.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedValue))
+            {
+                parsedValue = Mathf.Clamp(parsedValue, min, max);
+                if (onlyInt)
+                    parsedValue = Mathf.Round(parsedValue);
+
+                newSlider.value = parsedValue; 
+            }
+            else
+            {
+                valueField.SetValueWithoutNotify(
+                    onlyInt ? ((int)newSlider.value).ToString() : newSlider.value.ToString("0.##", CultureInfo.InvariantCulture));
+            }
+        });
+
+        valueField.RegisterCallback<InputEvent>(evt =>
+        {
+            string txt = evt.newData;
+            if (!(char.IsDigit(txt, 0) || txt == "." || txt == "," || txt == "-"))
+            {
+                evt.PreventDefault();
+            }
+        });
+
+        newSlider.RegisterCallback<KeyDownEvent>(evt =>
+        {
+            float step = onlyInt ? 1f : (max - min) / 100f;
+            float currentValue = newSlider.value;
+
+            switch (evt.keyCode)
+            {
+                case KeyCode.RightArrow:
+                case KeyCode.UpArrow:
+                    currentValue = Mathf.Clamp(currentValue + step, min, max);
+                    break;
+                case KeyCode.LeftArrow:
+                case KeyCode.DownArrow:
+                    currentValue = Mathf.Clamp(currentValue - step, min, max);
+                    break;
+                case KeyCode.Return:
+                case KeyCode.KeypadEnter:
+                    valueField.Blur();
+                    return;
+                default:
+                    return;
+            }
+
+            evt.StopPropagation();
+            newSlider.value = onlyInt ? Mathf.Round(currentValue) : currentValue;
+        });
+
         return newSlider;
     }
+
+
 
     public Toggle CreateToggle(string category ,string name,bool defaultValue = false) {
         
@@ -297,14 +357,15 @@ public class ModMenu : UIScreen {
     }
 
     
-    public Utils.CarouselEntry CreateCarousel(string category,string name, List<string> card,  Action<string> onValueChanged = null, string defaultValue = "")
-    {
+    public Utils.CarouselEntry CreateCarousel(string category, string name, List<string> card, Action<string> onValueChanged = null, string defaultValue = ""){
+        
         Utils.CarouselEntry entry = new Utils.CarouselEntry();
         VisualElement newcarousel = new VisualElement();
         newcarousel.style.flexDirection = FlexDirection.Row;
         newcarousel.style.alignItems = Align.Center;
         newcarousel.style.justifyContent = Justify.Center;
-        newcarousel.style.backgroundColor = _BBBackGround;
+
+        string longestString = card.Aggregate((max, cur) => max.Length > cur.Length ? max : cur);
 
         if (!BBSettings.HasEntry(category, name))
         {
@@ -313,11 +374,23 @@ public class ModMenu : UIScreen {
 
         string savedValue = BBSettings.GetEntryValue<string>(category, name);
         int currentIndex = card.IndexOf(savedValue);
-
         if (currentIndex < 0) currentIndex = 0;
 
         var lbl = CreateLabel(card[currentIndex]);
         lbl.style.fontSize = 20;
+        lbl.style.unityTextAlign = TextAnchor.MiddleCenter;
+
+        var textElement = new Label(longestString);
+        textElement.style.fontSize = 20;
+        textElement.style.visibility = Visibility.Hidden;
+        newcarousel.Add(textElement);
+
+        lbl.RegisterCallback<GeometryChangedEvent>(_ =>
+        {
+            lbl.style.width = textElement.contentRect.width;
+            textElement.RemoveFromHierarchy();
+        });
+
         var previous = CreateButton("<");
         var next = CreateButton(">");
 
@@ -348,16 +421,20 @@ public class ModMenu : UIScreen {
 
         next.clicked += NavigateNext;
         previous.clicked += NavigatePrevious;
-		entry.Value = savedValue;
+
+        entry.Value = savedValue;
         entry.Root = newcarousel;
         return entry;
     }
+
 
     
 
     public Utils.HotKeyEntry CreateHotKey(string category, string name, KeyCode defaultKey){
         Utils.HotKeyEntry entry = new Utils.HotKeyEntry();
         VisualElement newHotkey = new VisualElement();
+        
+        newHotkey.style.flexDirection = FlexDirection.Row;
         if (!BBSettings.HasEntry(category, name))
         {
             BBSettings.AddEntry<string>(category, name, defaultKey.ToString());
@@ -365,17 +442,21 @@ public class ModMenu : UIScreen {
 
         string savedValue = BBSettings.GetEntryValue<string>(category, name);
         Label labelKey = CreateLabel(savedValue);
+        labelKey.style.unityTextAlign = TextAnchor.MiddleCenter;
+        labelKey.style.marginLeft = 10;
         Button buttonReset = CreateButton("Unbind");
 
 
 
         buttonReset.clicked += UnbindControl;
+        buttonReset.style.scale = new StyleScale(new Vector2(0.75f,0.75f));
 
 
         void UnbindControl() {
-            labelKey.text = "Unbounded";
+            labelKey.text = "Not Bound";
             BBSettings.SetEntryValue<string>(category, name, "Unbind");
-            entry.Value = "Unbounded";
+            entry.Value = "Not Bound";
+            entry.OnChanged?.Invoke("Not Bound");
         }    
 
         labelKey.style.fontSize = 10 + labelKey.style.fontSize.value.value;
@@ -386,13 +467,19 @@ public class ModMenu : UIScreen {
 
         bool isListening = false;
 
+        
+        
+        
         labelKey.RegisterCallback<ClickEvent>(evt =>
         {
+            
+            
+            
             if (isListening) return;
             isListening = true;
 
             labelKey.text = "Press a key or mouse button...";
-
+            ListenMouseButtons();
             if (_root == null)
             {
                 isListening = false;
@@ -430,21 +517,30 @@ public class ModMenu : UIScreen {
 
                 SaveCombo(combo);
             }
-
-            void OnMouseDown(MouseDownEvent mouseEvt)
+            
+            async void ListenMouseButtons()
             {
-                string buttonName = $"Mouse{mouseEvt.button}";
-                string combo = "";
-                if (Keyboard.current != null)
+                while (isListening)
                 {
+                    if (Mouse.current == null) continue;
+
+                    string combo = "";
                     if (Keyboard.current.ctrlKey.isPressed) combo += "Ctrl+";
                     if (Keyboard.current.shiftKey.isPressed) combo += "Shift+";
                     if (Keyboard.current.altKey.isPressed) combo += "Alt+";
-                }
-                combo += buttonName;
 
-                SaveCombo(combo);
+                    if (Mouse.current.leftButton.wasPressedThisFrame) SaveCombo(combo + "Mouse0");
+                    else if (Mouse.current.rightButton.wasPressedThisFrame) SaveCombo(combo + "Mouse1");
+                    else if (Mouse.current.middleButton.wasPressedThisFrame) SaveCombo(combo + "Mouse2");
+                    else if (Mouse.current.backButton.wasPressedThisFrame) SaveCombo(combo + "Mouse3");
+                    else if (Mouse.current.forwardButton.wasPressedThisFrame) SaveCombo(combo + "Mouse4");
+
+                    await Task.Yield();
+                }
             }
+            
+
+           
 
             void SaveCombo(string combo)
             {
@@ -455,13 +551,11 @@ public class ModMenu : UIScreen {
                 entry.OnChanged?.Invoke(combo);
 
                 _root.UnregisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
-                _root.UnregisterCallback<MouseDownEvent>(OnMouseDown, TrickleDown.TrickleDown);
 
                 isListening = false;
             }
 
             _root.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
-            _root.RegisterCallback<MouseDownEvent>(OnMouseDown, TrickleDown.TrickleDown);
         });
 
         newHotkey.Add(labelKey);

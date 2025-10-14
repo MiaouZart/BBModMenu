@@ -65,16 +65,17 @@ namespace BBModMenu
                             ? mouse.middleButton.wasPressedThisFrame
                             : mouse.middleButton.isPressed;
                         break;
-                    case "Mouse3":
-                        keyOk = pressedThisFrame
-                            ? (mouse.forwardButton?.wasPressedThisFrame ?? false)
-                            : (mouse.forwardButton?.isPressed ?? false);
-                        break;
-                    case "Mouse4":
-                        keyOk = pressedThisFrame
-                            ? (mouse.backButton?.wasPressedThisFrame ?? false)
-                            : (mouse.backButton?.isPressed ?? false);
-                        break;
+                    case "Mouse3": 
+    					keyOk = pressedThisFrame
+        				? (mouse.backButton?.wasPressedThisFrame ?? false)
+        				: (mouse.backButton?.isPressed ?? false);
+    				break;
+					case "Mouse4":
+    					keyOk = pressedThisFrame
+        				? (mouse.forwardButton?.wasPressedThisFrame ?? false)
+        				: (mouse.forwardButton?.isPressed ?? false);
+   					 break;	
+		
                     default:
                         keyOk = false;
                         break;
